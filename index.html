@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Fetcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #202020;
+            color: #fff;
+        }
+        #content {
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            display: none;
+        }
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #202020;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #loading-logo {
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            width: 300px;
+            height: 4px;
+            background-color: #444;
+            border-radius: 2px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            width: 0%;
+            background-color: #4CAF50;
+            animation: progress 3s ease-in-out forwards;
+        }
+        .loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #aaa;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <img id="loading-logo" src="https://media.discordapp.net/attachments/1354830701421138086/1370052229347934329/image-removebg-preview.png?ex=681e1811&is=681cc691&hm=a4135f42c652fa46aa9cea1f211c2c476e505a0c01c03e1b803d04ea174e8240&=&format=webp&quality=lossless" alt="Loading...">
+        <div class="loading-text">Loading Content Fetcher...</div>
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+    </div>
+    
+    <div id="content">Loading content from https://content-c5v.pages.dev/...</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingScreen = document.getElementById('loading-screen');
+            const contentDiv = document.getElementById('content');
+            const targetDomain = 'https://content-c5v.pages.dev';
+            
+            // Always use the root URL of the target domain
+            const targetUrl = targetDomain + '/';
+
+            // Hide loading screen after 3 seconds and show content
+            setTimeout(function() {
+                loadingScreen.style.opacity = '0';
+                contentDiv.style.display = 'block';
+                
+                // Remove loading screen after fade out
+                setTimeout(function() {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+                
+                // Using an iframe approach to bypass CORS restrictions
+                contentDiv.innerHTML = `<iframe src="${targetUrl}" title="Content from ${targetUrl}"></iframe>`;
+            }, 3000);
+            
+            // Alternative approach using fetch (may be blocked by CORS)
+            function fetchContent() {
+                fetch(targetUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        // Display the content
+                        contentDiv.innerHTML = html;
+                        
+                        // Process and fix relative links
+                        fixRelativeLinks();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching content:', error);
+                        // If fetch fails, we already have the iframe as fallback
+                    });
+            }
+            
+            // Function to fix relative links in the fetched content
+            function fixRelativeLinks() {
+                const links = document.querySelectorAll('a');
+                links.forEach(link => {
+                    if (link.href && link.href.startsWith(window.location.origin)) {
+                        const relativePath = link.href.replace(window.location.origin, '');
+                        link.href = relativePath;
+                    }
+                });
+                
+                const images = document.querySelectorAll('img');
+                images.forEach(img => {
+                    if (img.src && !img.src.startsWith('http')) {
+                        img.src = targetDomain + (img.src.startsWith('/') ? '' : '/') + img.src;
+                    }
+                });
+                
+                const scripts = document.querySelectorAll('script');
+                scripts.forEach(script => {
+                    if (script.src && !script.src.startsWith('http')) {
+                        script.src = targetDomain + (script.src.startsWith('/') ? '' : '/') + script.src;
+                    }
+                });
+                
+                const links_css = document.querySelectorAll('link');
+                links_css.forEach(link => {
+                    if (link.href && !link.href.startsWith('http')) {
+                        link.href = targetDomain + (link.href.startsWith('/') ? '' : '/') + link.href;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,8 @@
+[build]
+  publish = "./"
+
+# Handle all routes with our index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200 
