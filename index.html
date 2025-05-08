@@ -86,19 +86,32 @@
             // Always use the root URL of the target domain
             const targetUrl = targetDomain + '/';
 
-            // Hide loading screen after 3 seconds and show content
-            setTimeout(function() {
-                loadingScreen.style.opacity = '0';
-                contentDiv.style.display = 'block';
-                
-                // Remove loading screen after fade out
+            // Check if this is the first visit
+            const hasVisited = localStorage.getItem('hasVisitedContentFetcher');
+            
+            if (!hasVisited) {
+                // First visit - show loading screen
                 setTimeout(function() {
-                    loadingScreen.style.display = 'none';
-                }, 500);
-                
-                // Using an iframe approach to bypass CORS restrictions
+                    loadingScreen.style.opacity = '0';
+                    contentDiv.style.display = 'block';
+                    
+                    // Remove loading screen after fade out
+                    setTimeout(function() {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                    
+                    // Set localStorage to remember this visit
+                    localStorage.setItem('hasVisitedContentFetcher', 'true');
+                    
+                    // Using an iframe approach to bypass CORS restrictions
+                    contentDiv.innerHTML = `<iframe src="${targetUrl}" title="Content from ${targetUrl}"></iframe>`;
+                }, 3000);
+            } else {
+                // Not first visit - hide loading screen immediately and show content
+                loadingScreen.style.display = 'none';
+                contentDiv.style.display = 'block';
                 contentDiv.innerHTML = `<iframe src="${targetUrl}" title="Content from ${targetUrl}"></iframe>`;
-            }, 3000);
+            }
             
             // Alternative approach using fetch (may be blocked by CORS)
             function fetchContent() {
